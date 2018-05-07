@@ -24,8 +24,9 @@ contract Greeting {
 ```
 
 **3. 솔리디티 자료형**
-* 솔리디티는 다른 언어와 마찬가지로, 다양한 자료형을 지원한다. (배열,구조체 지원)
-* 단, 부동소수점 자료형(float)는 지원하지 않는다.
+* 솔리디티는 다른 언어와 마찬가지로, 다양한 자료형을 지원한다. (배열, 구조체 지원)
+* 단, 부동소수점 자료형(float)는 지원하지 않는다. (부동소수점 타입으로는 수를 정확하게 표현하지 못하므로 Ether를 다룰 수 없다)
+* 솔리디티의 정수 자료형은 그 크기를 명시할 수 있다. (uint8, uint256, int8, int256)
 
 |  자료형 |         설명        |
 |:-------:|:-------------------:|
@@ -61,5 +62,39 @@ contract Variables {
     function getHappy() public view returns (bool){
         return isHappy;
     }
+}
+```
+
+**4. 연산자와 제어문**
+* C언어나 Java에서 사용하는 연산자와 제어문과 대부분 일치한다.
+* switch/case나 goto문은 지원하지 않는다.
+* 솔리디티는 자동 형 변환을 지원하지 않는다. 예를 들어 if(true)는 허용하지만 if(1)은 허용하지 않는다.
+
+**5. Payable 키워드**
+* 스마트 계약도 내부적으로 이더리움 계정을 가진다. (A->B로 송금시, 계약 계정(Contarct Accounts)을 거쳐서 송금)
+* payable 키워드는 계약 계정이 외부에서 이더를 송금 받을 수 있도록 한다. (즉, 계약이 A에게 송금을 받으려면 A가 호출하는 함수에 payable 키워드가 필요)
+
+예제 (Payable.sol)
+```
+function 함수이름() payable public {
+    //함수 내용
+}
+```
+
+```
+pragma solidity ^0.4.18;
+
+contract Solution {
+    uint256 balance = 0;
+
+    function sending() payable public {
+        balance = msg.value;
+        Sended(msg.value, balance);
+    }
+
+    event Sended(
+        uint256 _value,
+        uint256 _balance
+    );
 }
 ```
