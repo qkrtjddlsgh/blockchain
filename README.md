@@ -346,5 +346,5 @@ contract Crowdfunding {
 }
 ```
 
-** 온라인 상에서 솔리디티 코드를 작성하고 컴파일 할 수 있는 사이트 **
+온라인 상에서 솔리디티 코드를 작성하고 컴파일 할 수 있는 사이트
 * http://remix.ethereum.org/
