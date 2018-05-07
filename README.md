@@ -231,7 +231,7 @@ function buy() payable public {
 }
 ```
 
-**16. 오류 처리(Error Handling)
+**16. 오류 처리(Error Handling)**
 * require(bool 조건) : 조건을 만족하지 않으면 오류를 발생시킨다.
 * 솔리디티에는 catch 매커니즘이 없다. 오류가 발생하면 진행 중인 스마트 계약은 즉시 종료되며, 모든 상태는 호줄되기 전으로 돌아간다. (이때 계약을 호출할 때 소비한 가스는 반환되지 않는다)
 
@@ -241,7 +241,7 @@ function half(uint x) {
 }
 ```
 
-**17. 함수 제어자(Function Modifiers)
+**17. 함수 제어자(Function Modifiers)**
 * 함수 제어자는 커스텀 할 수 있는 제어자이다.
 * modifier 키워드로 선언한다. 함수를 호출할 때 함수 제어자를 명시해주면 실행 시 오류를 처리 할 수 있다.
 * 모든 실행 조건을 만족한 경우를 언더바(_)로 표시한다.
@@ -255,5 +255,92 @@ modifier onlyOwner {
 
 function changePrice(uint _price) public onlyOwner {
     price = _price;
+}
+```
+
+**크라우드 펀딩 DApp 예제**
+
+```
+pragma solidity ^0.4.18;
+
+contract Crowdfunding {
+    struct Campaign {
+        uint id;
+        address creator;
+        mapping (address => uint) balanceOf;
+        uint fundingGoal;
+        uint pledgedFund;
+        uint deadline;
+        bool closed;
+    }
+
+    mapping (uint => Campaign) campaigns;
+    uint campaignsId = 0;
+    
+    modifier campaignOwner(uint _campaignId) { 
+        require(msg.sender == campaigns[_campaignId].creator);
+        _;
+    }
+
+    event GeneratedCampaign(
+        uint indexed _id,
+        address indexed _creator,
+        uint _fundingGoal,
+        uint _deadline
+    );
+
+    event FundCampaign(
+        uint indexed _id,
+        address indexed _funder,
+        uint _amount,
+        uint _pledgedFund
+    );
+
+    event FundTransfer(
+        uint indexed _id,
+        address indexed _creator,
+        uint _pledgedFund,
+        bool _closed
+    );
+
+    function createCampaign(uint _fundingGoal) public {
+        campaigns[campaignsId] = Campaign(campaignsId, msg.sender, 
+                                          _fundingGoal, 0, 
+                                          getDeadline(now), false);
+
+        Campaign memory campaign = campaigns[campaignsId];
+        GeneratedCampaign(campaignsId, msg.sender, campaign.fundingGoal, campaign.deadline);
+        campaignsId++;
+    }
+
+    function fundCampaign(uint _campaignId) payable public {
+        require(msg.sender != campaigns[_campaignId].creator);
+
+        campaigns[_campaignId].pledgedFund += msg.value;
+        campaigns[_campaignId].balanceOf[msg.sender] += msg.value;
+
+        FundCampaign(_campaignId, msg.sender, msg.value, 
+                     campaigns[_campaignId].pledgedFund);
+    }
+
+    function checkFundingGoal(uint _campaignId)
+    public campaignOwner(_campaignId) {
+        Campaign memory c = campaigns[_campaignId];
+
+        if (c.fundingGoal <= c.pledgedFund) {
+             campaigns[_campaignId].closed = true;
+
+            msg.sender.transfer(c.pledgedFund);
+            FundTransfer(_campaignId, msg.sender, 
+                         c.pledgedFund, 
+                         campaigns[_campaignId].closed);
+        } else {
+            revert();
+        }
+    }
+
+    function getDeadline(uint _now) private pure returns (uint) {
+        return _now + (3600 * 24 * 7);
+    }
 }
 ```
