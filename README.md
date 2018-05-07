@@ -37,7 +37,6 @@ contract Greeting {
 |  bytes  |        바이트       |
 | address |   이더리움 주소 값  |
 
-
 예제 (Variables.sol)
 ```
 pragma solidity ^0.4.18;
@@ -140,7 +139,6 @@ contract Solution {
 * 트랜잭션들이 모여 하나의 블록을 이룬다. (이더리움 네트워크 상에는 이러한 블록들이 체인처럼 엮은 모습을 하고 있기 때문에 "블록체인" 이라고 부름)
 
 * 트랜잭션이 담은 정보
-
 |                   |                                    |
 |-------------------|------------------------------------|
 |  transactionHash  |          트랜잭션의 해시값         |
@@ -161,3 +159,101 @@ contract Solution {
 |   internal  | 상속받은 계약에서만 호출 가능 |                      접근 제어자를 명시하지 않은 상태 변수는 internal로 선언                      |
 |   private   |   해당 계약에서만 호출 가능   |                   상속받은 계약도 private으로 선언된 상태 변수/함수 호출 불가능                   |
 |   external  |       인터페이스의 함수       |              이 상태 변수/함수를 선언한 계약 내부에서는 이 상태 변수/함수 호출 불가능             |
+
+**11. View 함수**
+* 수수료(gas)가 들지 않는다.
+* 상태를 변경하지 않는다. (ReadOnly)
+
+```
+contract Variables {
+    uint year = 2018;
+
+    function get() public view returns (uint) {
+        return year;
+    }
+}
+```
+
+**12. Pure 함수**
+* 수수료(gas)가 들지 않는다.
+* 블록체인 네트워크에 기록된 데이터에 아예 접근하지 않는다.
+* 파라미터로 주어지지 않은 상태 변수는 읽거나 쓸 수 없다.
+
+|             구분            | 일반 함수 | View 함수 | Pure 함수 |
+|:---------------------------:|:---------:|:---------:|:---------:|
+| 네트워크에 기록된 상태 읽기 |     O     |     O     |     X     |
+| 네트워크에 기록된 상태 쓰기 |     O     |     X     |     X     |
+|      호출 시 가스 소모      |     O     |     X     |     X     |
+
+**13. 구조체(Structs)**
+* 다양한 자료형의 데이터를 묶어서 관리할 수 있다.
+
+```
+struct Person {
+    string name;
+    uint age;
+    address wallet;
+}
+
+function birthday() {
+    Person p = Person("James", 26, 0x7Df34...);
+    p.age += 1;
+}
+```
+
+**14. 맵핑(Mappings)**
+* <Key-Value> 형태의 자료 구조
+* 선언 시, Key 타입과 Value 타입을 지정해주어야 하며 Key로 Value를 불러올 수 있다.
+
+예제 (key로 address, value로 uint를 사용하는 예제)
+```
+mapping (address => uint) public balances;
+
+function open(uint newBalance) public {
+    balances[msg.sender] = newBalance;
+}
+```
+
+**15. Event로 로그 남기기**
+* 계약이 수행된 정보는 트랜잭션으로 남는다. (트랜잭션에 기록하고 싶은 사항이 있다면 이벤트를 사용)
+
+예제 (물건이 구입될때마다 구매자의 이더리움 주소와 결제 금액을 기록하는 예제)
+```
+event BuySomethings(
+    address indexed _buyer, // indexed 키워드가 붙은 데이터는 log 검색 시 사용할 수 있음
+    uint256 _value
+);
+
+function buy() payable public {
+    seller.transfer(msg.value);    
+    // 이벤트 호출
+    BuySomethings(msg.sender, msg.value);
+}
+```
+
+**16. 오류 처리(Error Handling)
+* require(bool 조건) : 조건을 만족하지 않으면 오류를 발생시킨다.
+* 솔리디티에는 catch 매커니즘이 없다. 오류가 발생하면 진행 중인 스마트 계약은 즉시 종료되며, 모든 상태는 호줄되기 전으로 돌아간다. (이때 계약을 호출할 때 소비한 가스는 반환되지 않는다)
+
+```
+function half(uint x) {
+    require(x % 2 == 0); // 짝수일 때만 허용
+}
+```
+
+**17. 함수 제어자(Function Modifiers)
+* 함수 제어자는 커스텀 할 수 있는 제어자이다.
+* modifier 키워드로 선언한다. 함수를 호출할 때 함수 제어자를 명시해주면 실행 시 오류를 처리 할 수 있다.
+* 모든 실행 조건을 만족한 경우를 언더바(_)로 표시한다.
+
+예제 (owner만 가격을 수정하도록 허용하는 함수 제어자 예제)
+```
+modifier onlyOwner {
+    require(msg.sender == owner);
+    _;
+}
+
+function changePrice(uint _price) public onlyOwner {
+    price = _price;
+}
+```
