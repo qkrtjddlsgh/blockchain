@@ -99,12 +99,65 @@ contract Solution {
 }
 ```
 
-**6. 메세지 프로퍼티**
+**6. 메세지 프로퍼티(Message Properties)**
 * 계약은 msg 프로퍼티를 사용해 계약을 호출한 사람이 보낸 메세지를 확인한다.
 * gas limit : 그 계약에서 한번 호출로 소비할 수 있는 최대의 가스 양
 
+|  정보  |   타입  |                   설명                  |
 |:------:|:-------:|:---------------------------------------:|
 |  data  |   byte  |               호출 데이터               |
 | sender | address |       계약을 호출한 이더리움 주소       |
-|  value |   uint  |        계약 주소로 보낸 Ether 량        |
+|  value |   uint  |         계약 주소로 보낸 Ether량        |
 |   gas  |   uint  | gas limit에서 함수를 호출하고 남은 가스 |
+
+**7. Transfer 함수**
+* transfer 함수를 사용하면 계약이 다른 이에게 이더를 전송한다.
+
+```
+<받는 사람의 주소>.transfer(<송금할 금액>);
+
+pragma solidity ^0.4.18;
+
+contract Solution {
+    address friend;
+
+    function transfer() payable public {
+        friend.transfer(msg.value);
+    }
+
+    function set(address _friend) public {
+        friend = _friend;
+    }
+}
+```
+**8. 계약 수수료(Gas)**
+* 작성된 스마트 계약은 EVM(Ethereum Virtual Machine) 타킷으로 컴파일된 후, 이더리움 네트워크에 배포된다.
+* 이렇게 배포된 스마트 계약 코드는 Gas라는 수수료를 내야 사용할 수 있다.
+* 수수료는 노드들이 데이터를 검증하고, 기록하는 등 다양한 일에 대한 댓가 (스마트 계약에 명령어가 많을수록 Gas를 더 많이 냄)
+
+**9. 계약 기록, 트랜잭션(Transaction)**
+* Smart Contract로 생성되는 장부 및 기록
+* 트랜잭션들이 모여 하나의 블록을 이룬다. (이더리움 네트워크 상에는 이러한 블록들이 체인처럼 엮은 모습을 하고 있기 때문에 "블록체인" 이라고 부름)
+
+* 트랜잭션이 담은 정보
+
+|                   |                                    |
+|-------------------|------------------------------------|
+|  transactionHash  |          트랜잭션의 해시값         |
+|  transactionIndex |         트랜잭션의 인덱스값        |
+|     blockHash     | 이 트랜잭션이 추가된 블록의 해시값 |
+|    blockNumber    |  이 트랜잭션이 추가된 블록의 번호  |
+|      gasUsed      |  이 트랜잭션 호출에 소비한 가스양  |
+| cumulativeGasUsed |       누적으로 사용된 가스량       |
+|  contractAddress  |             계약의 주소            |
+|        logs       |         event로 로깅된 정보        |
+
+**10. 접근 제어자(Visibility Modifiers)**
+* 접근 제어자를 통해 상태변수와 함수에 접근 범위를 제한 할 수 있다.
+
+| 접근 제어자 |              설명             |                                                특징                                               |
+|:-----------:|:-----------------------------:|:-------------------------------------------------------------------------------------------------:|
+|    public   |       외부에서 호출 가능      | 접근 제어자를 명시하지 않은 함수는 public으로 선언, public으로 선언하면 자동으로 Getter 함수 생성 |
+|   internal  | 상속받은 계약에서만 호출 가능 |                      접근 제어자를 명시하지 않은 상태 변수는 internal로 선언                      |
+|   private   |   해당 계약에서만 호출 가능   |                   상속받은 계약도 private으로 선언된 상태 변수/함수 호출 불가능                   |
+|   external  |       인터페이스의 함수       |              이 상태 변수/함수를 선언한 계약 내부에서는 이 상태 변수/함수 호출 불가능             |
